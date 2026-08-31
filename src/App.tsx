@@ -1,18 +1,77 @@
+// 📁 src/App.tsx — SESIÓN 3
+// SPA "simulada": el cambio de pantalla ocurre por estado de React (useState),
+// NO por react-router-dom. La URL del navegador nunca cambia.
 import { useState } from 'react';
-import { Dashboard } from './pages/Dashboardpage/DashboardPage';
-import InventarioPage from './pages/Inventariopage/InventarioPage';
-import PrestamosPage from './pages/Prestamospage/PrestamosPage';
-import TicketeraPage from './pages/Ticketerapage/TicketeraPage';
+import { AuthProvider } from './context/AuthContext';
+import MainLayout from './layouts/MainLayout/MainLayout';
+import LoginModal from './components/LoginModal/LoginModal';
+import DashboardPage from './pages/DashboardPage/DashboardPage';
+import EquiposPage from './pages/EquiposPage/EquiposPage';
+import PrestamosPage from './pages/PrestamosPage/PrestamosPage';
+import IncidenciasPage from './pages/IncidenciasPage/IncidenciasPage';
+import { equiposIniciales, prestamosIniciales, incidenciasIniciales } from './data/mockData';
+import type { EquipoData, PrestamoData, IncidenciaData } from './types/spacehub.types';
 
-export default function App() {
-  const [paginaActual, setPaginaActual] = useState<'dashboard' | 'inventario' | 'prestamos' | 'ticketera'>('dashboard');
+export type ModuloActivo = 'dashboard' | 'equipos' | 'prestamos' | 'incidencias';
+
+function SpaceHubApp() {
+  const [moduloActivo, setModuloActivo] = useState<ModuloActivo>('dashboard');
+  const [loginVisible, setLoginVisible] = useState(false);
+
+  const [equipos, setEquipos] = useState<EquipoData[]>(equiposIniciales);
+  const [prestamos, setPrestamos] = useState<PrestamoData[]>(prestamosIniciales);
+  const [incidencias, setIncidencias] = useState<IncidenciaData[]>(incidenciasIniciales);
+
+  const renderModulo = () => {
+    switch (moduloActivo) {
+      case 'dashboard':
+        return <DashboardPage equipos={equipos} prestamos={prestamos} incidencias={incidencias} />;
+      case 'equipos':
+        return (
+          <EquiposPage
+            equipos={equipos}
+            onAgregarEquipo={(eq) => setEquipos((prev) => [...prev, eq])}
+            onCambiarEstado={(id) =>
+              setEquipos((prev) =>
+                prev.map((e) => (e.id === id ? { ...e, estado: e.estado === 'Operativo' ? 'En Mantenimiento' : 'Operativo' } : e))
+              )
+            }
+          />
+        );
+      case 'prestamos':
+        return (
+          <PrestamosPage
+            equipos={equipos}
+            prestamos={prestamos}
+            onCrearPrestamo={(p) => setPrestamos((prev) => [...prev, p])}
+            onDevolver={(id) => setPrestamos((prev) => prev.map((p) => (p.id === id ? { ...p, estado: 'Devuelto' } : p)))}
+          />
+        );
+      case 'incidencias':
+        return (
+          <IncidenciasPage
+            incidencias={incidencias}
+            onCrear={(i) => setIncidencias((prev) => [...prev, i])}
+            onResolver={(id) => setIncidencias((prev) => prev.map((i) => (i.id === id ? { ...i, resuelta: true } : i)))}
+          />
+        );
+    }
+  };
 
   return (
-    <div>
-      {paginaActual === 'dashboard' && <Dashboard onNavigate={(pag) => setPaginaActual(pag as any)} />}
-      {paginaActual === 'inventario' && <InventarioPage onNavigate={(pag) => setPaginaActual(pag as any)} />}
-      {paginaActual === 'prestamos' && <PrestamosPage onNavigate={(pag) => setPaginaActual(pag as any)} />}
-      {paginaActual === 'ticketera' && <TicketeraPage onNavigate={(pag) => setPaginaActual(pag as any)} />}
-    </div>
+    <>
+      <MainLayout moduloActivo={moduloActivo} onCambiarModulo={setModuloActivo} onAbrirLogin={() => setLoginVisible(true)}>
+        {renderModulo()}
+      </MainLayout>
+      <LoginModal visible={loginVisible} onClose={() => setLoginVisible(false)} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <SpaceHubApp />
+    </AuthProvider>
   );
 }
