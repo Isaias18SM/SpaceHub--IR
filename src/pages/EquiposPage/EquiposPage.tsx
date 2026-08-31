@@ -1,82 +1,34 @@
-// 📁 src/pages/EquiposPage/EquiposPage.tsx — SESIÓN 3
-// El registro de un nuevo equipo se hace con un formulario inline (toggle),
-// NO con una ruta separada como /inventario/nuevo (eso llega en Sesión 4).
-import { useState } from 'react';
+// 📁 src/pages/EquiposPage/EquiposPage.tsx — SESIÓN 4
+// El formulario inline de Sesión 3 desapareció: ahora "Registrar Equipo"
+// navega a la ruta protegida /inventario/nuevo, y cada fila navega a
+// /inventario/:placaSena (ruta dinámica) en vez de mostrar el detalle inline.
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import type { EquipoData } from '../../types/spacehub.types';
 
 export interface EquiposPageProps {
   equipos: EquipoData[];
-  onAgregarEquipo: (equipo: EquipoData) => void;
   onCambiarEstado: (id: number) => void;
 }
 
-export default function EquiposPage({ equipos, onAgregarEquipo, onCambiarEstado }: EquiposPageProps) {
+export default function EquiposPage({ equipos, onCambiarEstado }: EquiposPageProps) {
   const { user } = useAuth();
   const esAprendiz = user?.rol === 'Aprendiz';
-  const [mostrarForm, setMostrarForm] = useState(false);
-  const [placa, setPlaca] = useState('');
-  const [marca, setMarca] = useState('');
-  const [ram, setRam] = useState('16GB DDR4');
-
-  const guardar = () => {
-    if (!placa || !marca) return;
-    onAgregarEquipo({ id: Date.now(), placaSena: placa, marcaModelo: marca, ram, estado: 'Operativo' });
-    setPlaca('');
-    setMarca('');
-    setMostrarForm(false);
-  };
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-bold text-white">💻 Catálogo General de Computadores</h3>
-        {/* RBAC visual: solo Admin ve el botón para registrar equipos */}
         {!esAprendiz && (
           <button
-            onClick={() => setMostrarForm(!mostrarForm)}
+            onClick={() => navigate('/inventario/nuevo')}
             className="bg-sena-green text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-emerald-600"
           >
             + Registrar Equipo
           </button>
         )}
       </div>
-
-      {mostrarForm && !esAprendiz && (
-        <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <input
-              value={placa}
-              onChange={(e) => setPlaca(e.target.value)}
-              placeholder="Placa SENA (ej. SENA-8942)"
-              className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white"
-            />
-            <input
-              value={marca}
-              onChange={(e) => setMarca(e.target.value)}
-              placeholder="Marca / Modelo"
-              className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white"
-            />
-            <select
-              value={ram}
-              onChange={(e) => setRam(e.target.value)}
-              className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white"
-            >
-              <option>16GB DDR4</option>
-              <option>32GB DDR5</option>
-              <option>8GB DDR4</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-2">
-            <button onClick={() => setMostrarForm(false)} className="bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-xl">
-              Cancelar
-            </button>
-            <button onClick={guardar} className="bg-sena-green text-white font-bold text-xs px-4 py-1.5 rounded-xl">
-              Guardar
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-x-auto">
         <table className="w-full text-left text-xs font-mono border-collapse">
@@ -92,7 +44,14 @@ export default function EquiposPage({ equipos, onAgregarEquipo, onCambiarEstado 
           <tbody className="divide-y divide-slate-800">
             {equipos.map((eq) => (
               <tr key={eq.id} className="hover:bg-slate-900/50">
-                <td className="p-3 text-sena-green font-bold">{eq.placaSena}</td>
+                <td className="p-3">
+                  <button
+                    onClick={() => navigate(`/inventario/${eq.placaSena}`)}
+                    className="text-sena-green font-bold hover:underline"
+                  >
+                    {eq.placaSena}
+                  </button>
+                </td>
                 <td className="p-3 font-bold text-white">{eq.marcaModelo}</td>
                 <td className="p-3 text-slate-400">{eq.ram}</td>
                 <td className="p-3">
