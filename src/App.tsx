@@ -1,7 +1,4 @@
-// 📁 src/App.tsx — SESIÓN 4
-// Árbol de rutas real con react-router-dom v6 + guardias RBAC.
-// Cada página protegida se envuelve en <ProtectedRoute> sin modificar
-// la lógica interna de la página (igual que en Sesión 3).
+
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
