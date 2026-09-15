@@ -36,9 +36,11 @@ export interface IncidenciaData {
   resuelta: boolean;
 }
 
-export interface AuthState {
+export interface AuthState{
   user: UsuarioData | null;
+  token: string | null;
   isAuthenticated: boolean;
-  loginSimulado: (correo: string, rol: RolUsuario, ficha?: string) => void;
-  logout: () => void;
+  login: (email: string, pass: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
+

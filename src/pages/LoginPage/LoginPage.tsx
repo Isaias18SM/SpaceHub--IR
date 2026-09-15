@@ -1,52 +1,50 @@
-// 📁 src/pages/LoginPage/LoginPage.tsx — SESIÓN 4
-// El login ya NO es un modal: es una página propia en la ruta pública "/login".
+// =================================================================
+// Archivo: src/pages/LoginPage/LoginPage.tsx
+# RESPONSABILIDAD: Renderiza el formulario de inicio de sesión y consume el authService.login.
+// =================================================================
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import type { RolUsuario } from '../../types/spacehub.types';
 
 export default function LoginPage() {
-  const { loginSimulado } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const entrarComo = (rol: RolUsuario) => {
-    if (rol === 'Aprendiz') {
-      loginSimulado('ana.fajardo@sena.edu.co', 'Aprendiz', '2879451');
-    } else {
-      loginSimulado('roberto.gomez@sena.edu.co', 'Administrador', 'STAFF-TI');
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await login(email, password);
+      navigate('/inventario');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
     }
-    navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-        <h4 className="font-bold text-sm text-sena-green uppercase font-mono">
-          🔐 Iniciar Sesión — SENA SpaceHub
-        </h4>
-        <p className="text-xs text-slate-400">Selecciona un usuario de prueba para cambiar de contexto.</p>
-
-        <button
-          onClick={() => entrarComo('Aprendiz')}
-          className="w-full text-left bg-slate-900 hover:bg-slate-800 p-3 rounded-2xl border border-slate-800 flex items-center justify-between"
-        >
-          <div>
-            <span className="font-bold text-sena-green block">👨‍🎓 Ana María Fajardo</span>
-            <span className="text-[10px] text-slate-400">Rol: Aprendiz ADSO • Ficha 2879451</span>
-          </div>
-          <span className="text-xs bg-sena-green/20 text-sena-green px-2 py-0.5 rounded font-bold">Aprendiz</span>
+    <div className="max-w-md mx-auto my-12 p-6 bg-slate-800 border border-slate-700 rounded-2xl text-white shadow-xl">
+      <h2 className="text-2xl font-bold text-sena-green text-center mb-6">Iniciar Sesión API SENA</h2>
+      {error && <div className="p-3 mb-4 bg-rose-900/80 border border-rose-500 rounded-xl text-rose-200 text-xs font-mono">{error}</div>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="loginEmail" className="block text-xs font-bold text-slate-300 mb-1">Correo Institucional</label>
+          <input id="loginEmail" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-sena-green" placeholder="roberto.gomez@sena.edu.co" />
+        </div>
+        <div>
+          <label htmlFor="loginPassword" className="block text-xs font-bold text-slate-300 mb-1">Contraseña</label>
+          <input id="loginPassword" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-sena-green" placeholder="••••••••" />
+        </div>
+        <button type="submit" disabled={loading} className="w-full py-3 bg-sena-green text-slate-900 font-extrabold rounded-xl hover:bg-emerald-500 transition shadow-lg disabled:opacity-50">
+          {loading ? 'Autenticando...' : 'Ingresar y Obtener JWT'}
         </button>
-
-        <button
-          onClick={() => entrarComo('Administrador')}
-          className="w-full text-left bg-slate-900 hover:bg-slate-800 p-3 rounded-2xl border border-slate-800 flex items-center justify-between"
-        >
-          <div>
-            <span className="font-bold text-sky-400 block">👨‍💼 Ing. Roberto Gómez</span>
-            <span className="text-[10px] text-slate-400">Rol: Administrador • Gestión Total</span>
-          </div>
-          <span className="text-xs bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded font-bold">Admin</span>
-        </button>
-      </div>
+      </form>
     </div>
   );
 }
